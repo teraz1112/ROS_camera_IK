@@ -20,8 +20,8 @@ def WtoC(world_array):
    world=np.array(world_array[:3])
    camera=np.zeros(5)
    camera[2:]=world_array[3:]
-   camera[0]=(2*world[0])/(-world[1]+np.sqrt(3)*world[2]+8)
-   camera[1]=(np.sqrt(3)*world[1]+world[2])/(-world[1]+np.sqrt(3)*world[2]+8)
+   camera[0]=(2*world[0])/(world[1]-np.sqrt(3)*world[2]+8)
+   camera[1]=(np.sqrt(3)*world[1]+world[2])/(world[1]-np.sqrt(3)*world[2]+8)
    return np.array(camera)
 
 def Run(ct,*args):
@@ -30,7 +30,7 @@ def Run(ct,*args):
    g_camera=WtoC(g_euler)
    #  print(g_quat)
    #  print(g_euler)
-   print(g_camera)
+   # print(g_camera)
 
    q=ct.robot.Q()
    #  # print 'firstq:',q
@@ -61,12 +61,12 @@ def Run(ct,*args):
       J_camera[2:]=J[3:]
 
       for j in range(7):
-         J_camera[0,j]=(2/(-x_euler[1]+np.sqrt(3)*x_euler[2]+8))*J[0,j]
-         +(2*x_euler[0]/np.square(-x_euler[1]+np.sqrt(3)*x_euler[2]+8))*J[1,j]
-         +(-2*np.sqrt(3)*x_euler[0]/np.square(-x_euler[1]+np.sqrt(3)*x_euler[2]+8))*J[2,j]
+         J_camera[0,j]=(2/(x_euler[1]-np.sqrt(3)*x_euler[2]+8))*J[0,j]
+         +(-2*x_euler[0]/np.square(x_euler[1]-np.sqrt(3)*x_euler[2]+8))*J[1,j]
+         +(2*np.sqrt(3)*x_euler[0]/np.square(-x_euler[1]+np.sqrt(3)*x_euler[2]+8))*J[2,j]
 
-         J_camera[1,j]=((4*x_euler[2]+8*np.sqrt(3))/np.square(-x_euler[1]+np.sqrt(3)*x_euler[2]+8))*J[1,j]
-         +((-4*x_euler[1]+8)/np.square(-x_euler[1]+np.sqrt(3)*x_euler[2]+8))*J[2,j]
+         J_camera[1,j]=((-4*x_euler[2]+8*np.sqrt(3))/np.square(x_euler[1]-np.sqrt(3)*x_euler[2]+8))*J[1,j]
+         +((4*x_euler[1]+8)/np.square(-x_euler[1]+np.sqrt(3)*x_euler[2]+8))*J[2,j]
 
       J_inv = np.linalg.pinv(J_camera)
 
@@ -102,8 +102,8 @@ def Run(ct,*args):
    # print (q_traj)
    
    ct.robot.FollowQTraj(q_traj, t_traj)
-   print(e_norm_traj)
+   # print(e_norm_traj)
    # print(x_camera_traj)
-   # print(g_camera)
-   # print(x_camera)
+   print(g_camera)
+   print(x_camera)
     

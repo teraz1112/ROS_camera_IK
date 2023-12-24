@@ -14,11 +14,7 @@ def Help():
 
 
 def Run(ct,*args):
-    a=ct.robot.FK()
-    print(a)
-    m=np.array(a[:3])
-    print(m)
-    f=np.zeros(2)
-    print(f)
-    f[0]=m[1]
-    print(f)
+  euler=[-np.pi/3,0,0]
+  R=tft.euler_matrix(euler[0],euler[1],euler[2])
+  R_inv=np.linalg.pinv(R)
+  print(R_inv)
