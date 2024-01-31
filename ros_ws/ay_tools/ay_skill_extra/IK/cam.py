@@ -24,8 +24,20 @@ def WtoC(world_array):
    camera[1]=(np.sqrt(3)*world[1]+world[2])/(world[1]-np.sqrt(3)*world[2]+8)
    return np.array(camera)
 
+def EtoM(roll,pitch,yaw):
+   R=np.linalg.pinv(tft.euler_matrix(roll,pitch,yaw))[:3, :3]
+   return R
+
 def Run(ct,*args):
+   
+   range1=4
+   roll1=-np.pi/3
+   pitch1=0
+   yaw1=0
+   R1=EtoM(roll1,pitch1,yaw1)
+
    g_quat=args[0]
+   g=np.array(g_quat[:3])
    g_euler=QtoE(g_quat)
    g_camera=WtoC(g_euler)
    #  print(g_quat)
@@ -38,6 +50,7 @@ def Run(ct,*args):
    t_traj= []
    x_camera_traj=[]
    e_norm_traj=[]
+   e_norm_3d_traj=[]
    q_traj.append(q)
    t_traj.append(0.0)
 
@@ -48,6 +61,10 @@ def Run(ct,*args):
       t_traj.append(dt*i)
       
       x_quat= ct.robot.FK(q)
+      x=np.array(x_quat[:3])
+      e_3d=g-x
+      e_norm_3d = np.linalg.norm(e_3d)
+      e_norm_3d_traj.append(e_norm_3d)
          
       x_euler=QtoE(x_quat)
 
@@ -61,12 +78,10 @@ def Run(ct,*args):
       J_camera[2:]=J[3:]
 
       for j in range(7):
-         J_camera[0,j]=(2/(x_euler[1]-np.sqrt(3)*x_euler[2]+8))*J[0,j]
-         +(-2*x_euler[0]/np.square(x_euler[1]-np.sqrt(3)*x_euler[2]+8))*J[1,j]
-         +(2*np.sqrt(3)*x_euler[0]/np.square(-x_euler[1]+np.sqrt(3)*x_euler[2]+8))*J[2,j]
-
-         J_camera[1,j]=((-4*x_euler[2]+8*np.sqrt(3))/np.square(x_euler[1]-np.sqrt(3)*x_euler[2]+8))*J[1,j]
-         +((4*x_euler[1]+8)/np.square(-x_euler[1]+np.sqrt(3)*x_euler[2]+8))*J[2,j]
+         J_camera[0,j]=((R1[0,0]*(R1[1,0]*x_euler[0]+R1[2,1]*x_euler[1]+R1[1,2]*x_euler[2]+range1)-R1[1,0]*(R1[0,0]*x_euler[0]+R1[0,1]*x_euler[1]+R1[0,2]*x_euler[2]))/np.square(R1[1,0]*x_euler[0]+R1[1,1]*x_euler[1]+R1[1,2]*x_euler[2]+range1))*J[0,j]+((R1[0,1]*(R1[1,0]*x_euler[0]+R1[2,1]*x_euler[1]+R1[1,2]*x_euler[2]+range1)-R1[1,1]*(R1[0,0]*x_euler[0]+R1[0,1]*x_euler[1]+R1[0,2]*x_euler[2]))/np.square(R1[1,0]*x_euler[0]+R1[1,1]*x_euler[1]+R1[1,2]*x_euler[2]+range1))*J[1,j]+((R1[0,2]*(R1[1,0]*x_euler[0]+R1[2,1]*x_euler[1]+R1[1,2]*x_euler[2]+range1)-R1[1,2]*(R1[0,0]*x_euler[0]+R1[0,1]*x_euler[1]+R1[0,2]*x_euler[2]))/np.square(R1[1,0]*x_euler[0]+R1[1,1]*x_euler[1]+R1[1,2]*x_euler[2]+range1))*J[2,j]
+         
+         J_camera[1,j]=((R1[2,0]*(R1[1,0]*x_euler[0]+R1[2,1]*x_euler[1]+R1[1,2]*x_euler[2]+range1)-R1[1,0]*(R1[2,0]*x_euler[0]+R1[2,1]*x_euler[1]+R1[2,2]*x_euler[2]))/np.square(R1[1,0]*x_euler[0]+R1[1,1]*x_euler[1]+R1[1,2]*x_euler[2]+range1))*J[0,j]+((R1[2,1]*(R1[1,0]*x_euler[0]+R1[2,1]*x_euler[1]+R1[1,2]*x_euler[2]+range1)-R1[1,1]*(R1[2,0]*x_euler[0]+R1[2,1]*x_euler[1]+R1[2,2]*x_euler[2]))/np.square(R1[1,0]*x_euler[0]+R1[1,1]*x_euler[1]+R1[1,2]*x_euler[2]+range1))*J[1,j]+((R1[2,2]*(R1[1,0]*x_euler[0]+R1[2,1]*x_euler[1]+R1[1,2]*x_euler[2]+range1)-R1[1,2]*(R1[2,0]*x_euler[0]+R1[2,1]*x_euler[1]+R1[2,2]*x_euler[2]))/np.square(R1[1,0]*x_euler[0]+R1[1,1]*x_euler[1]+R1[1,2]*x_euler[2]+range1))*J[2,j]
+         
 
       J_inv = np.linalg.pinv(J_camera)
 
@@ -102,8 +117,9 @@ def Run(ct,*args):
    # print (q_traj)
    
    ct.robot.FollowQTraj(q_traj, t_traj)
-   # print(e_norm_traj)
-   # print(x_camera_traj)
+   print(e_norm_traj)
+   print(e_norm_3d_traj)
+   print(x_camera_traj)
    print(g_camera)
    print(x_camera)
     
